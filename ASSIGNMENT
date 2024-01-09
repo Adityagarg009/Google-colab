@@ -1,0 +1,62 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNxSDIIkqidEXx2bn9+/mfI",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Adityagarg009/Google-colab/blob/main/ASSIGNMENT\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "he_Y7lIQl9cm"
+      },
+      "outputs": [],
+      "source": [
+        "import pinecone\n",
+        "import openai\n",
+        "from transformers import RagTokenizer, RagRetriever, RagSequenceForGeneration\n",
+        "openai.api_key = \"your_openai_api_key\"\n",
+        "pinecone.init(api_key=\"pinecone_api_key\")\n",
+        "docs = [\"Document 1\", \"Document 2\", ...]\n",
+        "pinecone.create_index(index_name=\"business_qa_index\", dimension=512, metric=\"cosine\")\n",
+        "pinecone.upsert_items(index_name=\"business_qa_index\", items=enumerate(docs))\n",
+        "tokenizer = RagTokenizer.from_pretrained(\"facebook/rag-token-base\")\n",
+        "retriever = RagRetriever.from_pretrained(\"facebook/rag-token-base\", index_name=\"business_qa_index\")\n",
+        "model = RagSequenceForGeneration.from_pretrained(\"facebook/rag-token-base\", retriever=retriever)\n",
+        "\n",
+        "def qa_bot(question):\n",
+        "    input_dict = tokenizer(question, return_tensors=\"pt\")\n",
+        "    documents = retriever(input_dict[\"input_ids\"].numpy())\n",
+        "    answer = model.generate(**input_dict, documents=documents[\"retrieved_text\"])\n",
+        "    answer_text = tokenizer.batch_decode(answer, skip_special_tokens=True)[0]\n",
+        "\n",
+        "    return answer_text\n",
+        "question = \"What are the benefits of using RAG for a QA bot in a business setting?\"\n",
+        "answer = qa_bot(question)\n",
+        "print(\"Answer:\", answer)\n"
+      ]
+    }
+  ]
+}
